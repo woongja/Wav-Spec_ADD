@@ -1,0 +1,11 @@
+# Combined Configuration: CE + Cluster Loss
+# Combines traditional cross-entropy with cluster-based metric learning
+
+model:
+  name: ssl_cluster_model
+  emb_size: 256
+  pooling_type: mean  # Options: mean, max, attention
+  ssl_model_path: /home/woongjae/wildspoof/xlsr2_300m.pt
+
+data:
+  name: data_utils
