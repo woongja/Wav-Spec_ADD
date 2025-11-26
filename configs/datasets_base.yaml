@@ -1,0 +1,34 @@
+# Base Dataset Configuration (공통)
+# eval 스크립트에서 결과 경로만 추가로 지정
+
+itw:
+  database_path: /home/woongjae/wildspoof/Datasets/itw
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_itw.txt
+
+add2022:
+  database_path: /home/woongjae/wildspoof/Datasets/add2022
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_add2022.txt
+
+wildspoof:
+  database_path: /home/woongjae/wildspoof/Datasets/Wild_Spoof_Dataset
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_wildspoof_hung.txt
+
+deepen:
+  database_path: /home/woongjae/wildspoof/Datasets/shortcutASV
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_deepen.txt
+
+asv19_noise:
+  database_path: /home/woongjae/wildspoof/Datasets/asv19_noise
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_asv19_noise.txt
+
+df21_noise:
+  database_path: /home/woongjae/wildspoof/Datasets/df21_noise
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_df21_noise.txt
+
+spoofceleb_aug:
+  database_path: /home/woongjae/wildspoof/Datasets/spoofceleb_aug
+  protocol_path: /home/woongjae/wildspoof/protocols/protocol_spoofceleb_5p_balance_augmented.txt
+
+wildspoof_eval:
+  database_path: /home/woongjae/wildspoof/Datasets/wildspoof_evaluation/release_v2/data_v2.0
+  protocol_path: /home/woongjae/wildspoof/Datasets/wildspoof_evaluation/release_v2/protocol_test.tsv

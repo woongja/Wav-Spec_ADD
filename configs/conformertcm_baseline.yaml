@@ -1,0 +1,16 @@
+model:
+  name: conformertcm
+  emb_size: 144
+  heads: 4
+  kernel_size: 31
+  num_encoders: 4
+data:
+  name: data_utils
+  n_mels: 64
+  n_fft: 512
+  hop_length: 160
+  win_length: 400
+  fmin: 20
+  fmax: 7600
+  mean_norm: true
+  std_norm: true
