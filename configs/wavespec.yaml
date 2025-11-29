@@ -1,0 +1,80 @@
+# WaveSpec Model Configuration
+# Wave-Spectrogram Cross-Modal Aggregation for Audio Deepfake Detection
+# with PESQ-based Attention Modulation
+
+model:
+  name: wavespec
+
+  # XLSR Encoder
+  xlsr_model_path: /home/woongjae/wildspoof/xlsr2_300m.pt
+  freeze_xlsr: true  # Freeze during first epoch
+
+  # Feature dimensions
+  output_dim: 1024  # XLSR output dimension
+  num_classes: 2    # Binary classification (real/fake)
+  emb_size: 512     # Embedding dimension from classifier
+
+  # CMFF (Cross-Modal Feature Fusion)
+  reduction: 16    # Reduction ratio for MS-CAM attention
+
+  # Loss configuration
+  use_scl: true    # Use Single Center Loss
+  scl_weight: 0.1  # Weight for SCL loss (lambda)
+
+  # PESQ-based attention modulation
+  use_pesq: false  # Use PESQ scores for attention modulation (set to true to enable)
+  pesq_init_alpha: 1.0  # Initial alpha for PESQ modulation
+  pesq_init_beta: 0.0   # Initial beta for PESQ modulation
+
+  # Debug mode
+  debug: true  # Print dimension and attention info during training (first batch only)
+
+# Data preprocessing (for CQT Spectrogram Encoder)
+data:
+  name: data_utils_asvspoof
+
+  # CQT parameters
+  n_bins: 84  # Number of frequency bins (7 octaves * 12 bins/octave)
+  bins_per_octave: 12  # Semitone resolution
+  hop_length: 160
+  sample_rate: 16000
+  fmin: 32.7  # C1 note frequency
+
+  # Normalization
+  mean_norm: true
+  std_norm: true
+
+  # Audio processing
+  max_duration: 4.0  # seconds
+  min_duration: 1.0  # seconds
+
+# Training configuration
+training:
+  # Optimizer
+  optimizer: adamw
+  lr: 0.0001
+  weight_decay: 0.0001
+
+  # Scheduler
+  scheduler: cosine
+  warmup_epochs: 5
+
+  # Training strategy
+  epochs: 50
+  batch_size: 16
+  num_workers: 8
+
+  # XLSR unfreezing
+  unfreeze_xlsr_epoch: 2  # Unfreeze after this epoch
+
+  # Gradient clipping
+  max_grad_norm: 5.0
+
+  # Mixed precision
+  use_amp: true
+
+# Evaluation
+evaluation:
+  batch_size: 32
+  compute_eer: true
+  compute_min_dcf: true

@@ -69,8 +69,15 @@ def eval_model(args, config, device):
         for batch_x, utt_id in tqdm(eval_loader, desc="Evaluation"):
             batch_x = batch_x.to(device)
 
-            # Get predictions
-            logits, embeddings = model(batch_x, return_embedding=True)
+            # Get predictions - WaveSpec returns dict
+            outputs = model(
+                batch_x,
+                pesq=None,
+                labels=None,
+                debug=False
+            )
+
+            logits = outputs['logits']
 
             # Get scores (bonafide probability)
             scores = F.softmax(logits, dim=1)[:, 0]  # bonafide score
@@ -137,12 +144,26 @@ def train_epoch(train_loader, model, criterion, optimizer, device, epoch, args):
 
     pbar = tqdm(train_loader, ncols=120, desc=f"Epoch {epoch} [Train]")
 
-    for batch_x, batch_y in pbar:
+    # Debug flag for first batch only
+    debug_mode = args.debug if hasattr(args, 'debug') else False
+
+    for batch_idx, (batch_x, batch_y) in enumerate(pbar):
         batch_x = batch_x.to(device)
         batch_y = batch_y.to(device).long()
 
-        # Forward pass
-        logits, embeddings = model(batch_x, return_embedding=True)
+        # Forward pass - WaveSpec returns dict
+        # Enable debug only for first batch of first epoch
+        enable_debug = debug_mode and epoch == 0 and batch_idx == 0
+
+        outputs = model(
+            batch_x,
+            pesq=None,  # PESQ scores (to be added later)
+            labels=batch_y,
+            debug=enable_debug
+        )
+
+        logits = outputs['logits']
+        embeddings = outputs['embedding']
 
         # Compute loss
         if args.loss_type == 'cluster_only':
@@ -153,8 +174,21 @@ def train_epoch(train_loader, model, criterion, optimizer, device, epoch, args):
             loss, loss_dict = criterion(logits, embeddings, batch_y)
         else:  # 'ce_only'
             # Standard cross-entropy
-            loss = criterion(logits, batch_y)
-            loss_dict = {'total_loss': loss.item(), 'ce_loss': loss.item()}
+            ce_loss = criterion(logits, batch_y)
+
+            # Add SCL loss if available
+            if 'scl_loss' in outputs:
+                scl_weight = args.scl_weight if hasattr(args, 'scl_weight') else 0.1
+                scl_loss = outputs['scl_loss']
+                loss = ce_loss + scl_weight * scl_loss
+                loss_dict = {
+                    'total_loss': loss.item(),
+                    'ce_loss': ce_loss.item(),
+                    'scl_loss': scl_loss.item()
+                }
+            else:
+                loss = ce_loss
+                loss_dict = {'total_loss': loss.item(), 'ce_loss': loss.item()}
 
         # Backward pass
         optimizer.zero_grad()
@@ -216,8 +250,16 @@ def eval_epoch(dev_loader, model, criterion, device, epoch, args):
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device).long()
 
-            # Forward pass
-            logits, embeddings = model(batch_x, return_embedding=True)
+            # Forward pass - WaveSpec returns dict
+            outputs = model(
+                batch_x,
+                pesq=None,  # PESQ scores (to be added later)
+                labels=batch_y,
+                debug=False  # No debug during validation
+            )
+
+            logits = outputs['logits']
+            embeddings = outputs['embedding']
 
             # Compute loss
             if args.loss_type == 'cluster_only':
@@ -225,8 +267,21 @@ def eval_epoch(dev_loader, model, criterion, device, epoch, args):
             elif args.loss_type == 'combined':
                 loss, loss_dict = criterion(logits, embeddings, batch_y)
             else:  # 'ce_only'
-                loss = criterion(logits, batch_y)
-                loss_dict = {'total_loss': loss.item(), 'ce_loss': loss.item()}
+                ce_loss = criterion(logits, batch_y)
+
+                # Add SCL loss if available
+                if 'scl_loss' in outputs:
+                    scl_weight = args.scl_weight if hasattr(args, 'scl_weight') else 0.1
+                    scl_loss = outputs['scl_loss']
+                    loss = ce_loss + scl_weight * scl_loss
+                    loss_dict = {
+                        'total_loss': loss.item(),
+                        'ce_loss': ce_loss.item(),
+                        'scl_loss': scl_loss.item()
+                    }
+                else:
+                    loss = ce_loss
+                    loss_dict = {'total_loss': loss.item(), 'ce_loss': loss.item()}
 
             val_loss += loss.item()
 

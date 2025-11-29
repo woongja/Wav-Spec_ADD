@@ -1,3 +1,4 @@
 SUPPORTED_MODELS = [
-    "xlsr_conformertcm"
+    "xlsr_conformertcm",
+    "wavespec"
 ]
